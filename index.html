@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DevOps Drill</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one narrow study column, sticky header with mode tabs, topic chips, one practice card at a time */
+:root{
+  --bg:#EEF1F4; --surface:#FFFFFF; --ink:#16202E; --muted:#5A6576; --line:#D5DBE3;
+  --accent:#2747C9; --accent-ink:#FFFFFF; --soft:#E3E8FB; --code:#E8ECF2;
+  --good:#1E7A4C; --good-soft:#DDF1E6; --bad:#B3362B; --bad-soft:#F8E1DE;
+  --display:"Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", system-ui, -apple-system, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#10151D; --surface:#18202B; --ink:#E6EBF2; --muted:#98A3B3; --line:#2A3442;
+  --accent:#7D95FF; --accent-ink:#0C1118; --soft:#1F2A4A; --code:#0C1118;
+  --good:#4CC38A; --good-soft:#123326; --bad:#F07A6E; --bad-soft:#3A1A17; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#10151D; --surface:#18202B; --ink:#E6EBF2; --muted:#98A3B3; --line:#2A3442;
+  --accent:#7D95FF; --accent-ink:#0C1118; --soft:#1F2A4A; --code:#0C1118;
+  --good:#4CC38A; --good-soft:#123326; --bad:#F07A6E; --bad-soft:#3A1A17; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:640px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 40px}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:14px 10px;display:grid;gap:12px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+h1{font-family:var(--display);font-weight:800;font-size:1.6rem;letter-spacing:-.02em;margin:0;line-height:1.1}
+h1 span{color:var(--accent)}
+.stat{font-family:var(--mono);font-size:.78rem;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.modes{display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+.modes button{font:600 .85rem var(--body);border:0;background:transparent;color:var(--muted);padding:8px 4px;border-radius:7px;cursor:pointer}
+.modes button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-block:12px 4px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;font:600 .8rem var(--mono);border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:6px 11px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--soft);border-color:var(--accent);color:var(--accent)}
+main{display:grid;gap:14px;padding-top:10px}
+.meta{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:.82rem;color:var(--muted)}
+.tag{font:600 .7rem var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--accent)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:grid;gap:14px;min-width:0}
+.prompt{font-family:var(--display);font-weight:600;font-size:1.25rem;line-height:1.3;margin:0;text-wrap:balance}
+.flip{cursor:pointer;min-height:220px;align-content:start}
+.hint{font-size:.85rem;color:var(--muted)}
+pre,code{font-family:var(--mono)}
+pre{background:var(--code);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:0;overflow-x:auto;font-size:.88rem;line-height:1.55;white-space:pre}
+.answer{border-top:1px dashed var(--line);padding-top:14px;display:grid;gap:10px}
+.note{font-size:.92rem;color:var(--muted);margin:0}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.btn{font:700 .95rem var(--body);border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:11px 16px;border-radius:10px;cursor:pointer;flex:1 1 auto}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.good{border-color:var(--good);color:var(--good)}
+.btn:focus-visible,.chip:focus-visible,.modes button:focus-visible,.opt:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.opts{display:grid;gap:8px}
+.opt{text-align:left;font:400 .95rem var(--body);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:12px 14px;cursor:pointer;display:flex;gap:10px}
+.opt b{font-family:var(--mono);color:var(--muted)}
+.opt.right{border-color:var(--good);background:var(--good-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.opt:disabled{cursor:default}
+.verdict{border-radius:10px;padding:12px 14px;font-size:.93rem}
+.verdict.ok{background:var(--good-soft);color:var(--ink);border-left:4px solid var(--good)}
+.verdict.no{background:var(--bad-soft);color:var(--ink);border-left:4px solid var(--bad)}
+.verdict strong{display:block;margin-bottom:2px}
+input.blank{font:600 .88rem var(--mono);background:var(--surface);color:var(--ink);border:1px dashed var(--accent);border-radius:6px;padding:2px 6px;width:13ch;min-width:5ch}
+.method{display:grid;gap:14px}
+.method h2{font-family:var(--display);font-weight:800;font-size:1.15rem;margin:0}
+.method ol,.method ul{margin:0;padding-left:1.3em;display:grid;gap:8px}
+.method li code{background:var(--code);padding:1px 5px;border-radius:4px;font-size:.88em}
+.bar{height:6px;background:var(--line);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--good);transition:width .3s}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <h1>DevOps <span>Drill</span></h1>
+      <div class="stat" id="stat"></div>
+    </div>
+    <div class="modes" role="group" aria-label="Practice mode">
+      <button data-mode="cards" aria-pressed="true">Cards</button>
+      <button data-mode="quiz" aria-pressed="false">Scenarios</button>
+      <button data-mode="fill" aria-pressed="false">Fill in</button>
+      <button data-mode="method" aria-pressed="false">Method</button>
+    </div>
+  </header>
+  <nav class="chips" id="chips" aria-label="Topic"></nav>
+  <main id="main"></main>
+</div>
+
+<script>
+const TOPICS={all:"All",linux:"Linux",git:"Git",docker:"Docker",tf:"Terraform",ansible:"Ansible",k8s:"Kubernetes",aws:"AWS CLI",cicd:"CI/CD"};
+
+// Flashcards: [topic, task, command, note]
+const CARDS=[
+["linux","Show which folder you are in","pwd",""],
+["linux","List files with their permissions","ls -l",""],
+["linux","Fix the SSH error \"permissions are too open\" on your key","chmod 400 key.pem","400 = only you can read it."],
+["linux","SSH into an Amazon Linux EC2 server","ssh -i key.pem ec2-user@<public-ip>","Ubuntu servers use ubuntu@ instead of ec2-user@."],
+["linux","Check free disk space","df -h","-h means human-readable (GB, MB)."],
+["linux","Find what is using space in this folder","du -sh *",""],
+["linux","Check memory use","free -h",""],
+["linux","Check whether nginx is running","sudo systemctl status nginx",""],
+["linux","Start nginx now and on every boot","sudo systemctl enable --now nginx",""],
+["linux","Read a service's logs","sudo journalctl -u nginx",""],
+["linux","Test the web server from inside the server","curl localhost","If this works but the browser fails, suspect the security group."],
+["linux","Watch a log file live","tail -f /var/log/nginx/error.log","Ctrl + C to stop."],
+["linux","Search for a word in a file","grep \"error\" app.log",""],
+["linux","See which ports are listening","sudo ss -tulpn",""],
+["linux","Install nginx on Amazon Linux 2023","sudo dnf install -y nginx","On Ubuntu: sudo apt install -y nginx"],
+["git","Copy a repository to your computer","git clone <url>",""],
+["git","See what has changed","git status",""],
+["git","Stage every changed file","git add .",""],
+["git","Save a snapshot with a message","git commit -m \"Add EC2 resource\"",""],
+["git","Send commits to GitHub","git push",""],
+["git","Get the latest changes from GitHub","git pull",""],
+["git","Create a new branch and switch to it","git checkout -b feature-x","Newer form: git switch -c feature-x"],
+["git","Show a short history","git log --oneline",""],
+["docker","Build an image from the Dockerfile in this folder","docker build -t myapp:1.0 .","The final dot means \"this folder\". Forgetting it is a classic error."],
+["docker","Run a container in the background, host port 8080 to container port 80","docker run -d -p 8080:80 --name web myapp:1.0","Order is HOST:CONTAINER."],
+["docker","List running containers","docker ps","Add -a to include stopped ones."],
+["docker","See why a container stopped","docker logs web",""],
+["docker","Open a shell inside a running container","docker exec -it web sh",""],
+["docker","Stop and remove a container","docker stop web\ndocker rm web",""],
+["docker","List images","docker images",""],
+["docker","Start everything in docker-compose.yml in the background","docker compose up -d",""],
+["docker","The five Dockerfile words to remember","FROM  COPY  RUN  EXPOSE  CMD","FROM = base image, COPY = add files, RUN = run at build, EXPOSE = port, CMD = start command."],
+["tf","Prepare a new Terraform folder and download providers","terraform init","Always first. Run it again after adding a provider."],
+["tf","Tidy the spacing in your code","terraform fmt",""],
+["tf","Check the code for mistakes","terraform validate",""],
+["tf","Preview what will be created","terraform plan",""],
+["tf","Actually create the resources","terraform apply","Type yes to confirm."],
+["tf","Delete everything Terraform created","terraform destroy","Do this after every practice to avoid charges."],
+["tf","List everything Terraform is managing","terraform state list",""],
+["tf","Show the output values again","terraform output",""],
+["tf","What is the difference between resource and data?","resource = CREATE something\ndata     = READ something that exists",""],
+["tf","Save a plan and apply exactly that plan","terraform plan -out tfplan\nterraform apply tfplan","Used in team pipelines."],
+["tf","The two settings an aws_instance must have","ami\ninstance_type","Image (AMI) and size. Remember the underscore."],
+["ansible","Test that Ansible can reach your servers","ansible all -i inventory.ini -m ping","Reply should be \"pong\"."],
+["ansible","Run a playbook","ansible-playbook -i inventory.ini site.yml",""],
+["ansible","Do a dry run without changing anything","ansible-playbook -i inventory.ini site.yml --check",""],
+["ansible","Check a playbook for YAML mistakes","ansible-playbook site.yml --syntax-check",""],
+["ansible","A simple inventory entry for one EC2 server","[web]\n3.10.20.30 ansible_user=ec2-user ansible_ssh_private_key_file=~/key.pem",""],
+["ansible","What does become: yes do?","Runs tasks as admin (sudo)","Forget it and installs fail with a permission error."],
+["ansible","Inventory vs playbook","Inventory = WHICH servers\nPlaybook  = WHAT to do",""],
+["k8s","Start a local Kubernetes cluster","minikube start",""],
+["k8s","Create or update things from a YAML file","kubectl apply -f app.yaml",""],
+["k8s","List pods and their status","kubectl get pods",""],
+["k8s","Find out WHY a pod has a problem (events)","kubectl describe pod <name>","Look at Events at the bottom."],
+["k8s","See the app's own error messages","kubectl logs <name>",""],
+["k8s","Scale a deployment to 3 copies","kubectl scale deployment web --replicas=3",""],
+["k8s","List services","kubectl get svc",""],
+["k8s","Get a URL for a service in minikube","minikube service web --url",""],
+["k8s","Open a shell inside a pod","kubectl exec -it <pod> -- sh",""],
+["k8s","Watch a deployment roll out","kubectl rollout status deployment/web",""],
+["k8s","Undo a bad deployment","kubectl rollout undo deployment/web",""],
+["k8s","Delete everything a YAML file created","kubectl delete -f app.yaml",""],
+["k8s","Pod vs Deployment vs Service","Pod = the worker\nDeployment = the manager\nService = the reception desk",""],
+["aws","Check which AWS user you are logged in as","aws sts get-caller-identity",""],
+["aws","Set up your access keys and region","aws configure",""],
+["aws","List S3 buckets","aws s3 ls",""],
+["aws","Upload one file to S3","aws s3 cp index.html s3://my-bucket/",""],
+["aws","Upload a whole folder to S3","aws s3 sync ./site s3://my-bucket",""],
+["aws","List EC2 instances","aws ec2 describe-instances",""],
+["aws","Stop an EC2 instance","aws ec2 stop-instances --instance-ids i-0abc123",""],
+["aws","Follow a Lambda function's logs","aws logs tail /aws/lambda/my-func --follow",""],
+["aws","Clear CloudFront's cache after an upload","aws cloudfront create-invalidation --distribution-id E123 --paths \"/*\"",""],
+["cicd","Where GitHub Actions workflow files live",".github/workflows/deploy.yml","Any name ending .yml inside that folder."],
+["cicd","Run a workflow on every push to main","on:\n  push:\n    branches: [main]",""],
+["cicd","The first step in almost every workflow","- uses: actions/checkout@v4","Without it, the runner has no copy of your code."],
+["cicd","Use a secret in GitHub Actions","${{ secrets.AWS_ACCESS_KEY_ID }}","Add it in repo Settings → Secrets and variables → Actions."],
+["cicd","File name for a Jenkins pipeline","Jenkinsfile","At the root of the repo."],
+["cicd","Run a shell command in a Jenkinsfile stage","steps {\n  sh 'docker build -t myapp .'\n}",""],
+["cicd","Where to look first in a failed pipeline log","The FIRST error, not the last line","Later errors are often caused by the first one."]
+];
+
+// Scenarios: [topic, situation, options, correct index, why]
+const QUIZ=[
+["linux","Your website on EC2 does not load in the browser. On the server, curl localhost shows the nginx page. What is most likely wrong?",["nginx is stopped","The security group does not allow port 80","The AMI is wrong","The disk is full"],1,"It works inside the server but not from outside, so something is blocking traffic on the way in: the security group (firewall)."],
+["linux","SSH says: UNPROTECTED PRIVATE KEY FILE. What do you run?",["chmod 777 key.pem","chown root key.pem","chmod 400 key.pem","sudo ssh"],2,"The key is too open. chmod 400 makes it readable only by you. 777 makes it worse."],
+["linux","On the server, curl localhost says Connection refused. What do you check next?",["sudo systemctl status nginx","The security group","terraform plan","git status"],0,"Connection refused from inside means nothing is listening. Check whether the web server is running."],
+["linux","An app fails with No space left on device. What do you run first?",["free -h","df -h","top","ls -l"],1,"df -h shows disk space. Then du -sh * finds what is using it. free -h is memory, not disk."],
+["docker","docker ps shows 0.0.0.0:8080->80/tcp. You open http://localhost and nothing loads. Why?",["Docker is broken","You should open port 8080, not 80","The image is wrong","Port 80 is the host port"],1,"8080:80 means HOST 8080 goes to CONTAINER 80. From your browser, use localhost:8080."],
+["docker","A container stops immediately after docker run. What do you check first?",["docker images","docker logs <name>","docker build","docker compose up"],1,"The logs show the app's error message that made it exit."],
+["docker","docker build fails with COPY failed: file not found. What is the likely cause?",["The FROM image is wrong","The file path in COPY is wrong, or you built from the wrong folder","Port not exposed","Docker is not running"],1,"COPY paths are relative to the build folder (the dot at the end of docker build)."],
+["tf","terraform plan says: No valid credential sources found. What do you do?",["terraform destroy","Check AWS credentials with aws sts get-caller-identity / aws configure","Change the region","Delete the .terraform folder"],1,"Terraform uses your AWS CLI credentials. If they are missing or expired, it cannot talk to AWS."],
+["tf","You added a new provider and terraform plan complains the provider is not installed. What do you run?",["terraform init","terraform fmt","terraform apply","terraform output"],0,"init downloads providers. Run it again whenever providers change."],
+["tf","Error: Reference to undeclared resource aws_security_group.web. Your block is named \"web_sg\". Fix?",["Rename the provider","Change the reference to aws_security_group.web_sg.id","Run terraform init","Add a data block"],1,"References must use the exact name you gave the block: type.name.attribute."],
+["tf","You finished practising and want to avoid AWS charges. What do you run?",["terraform plan","terraform validate","terraform destroy","terraform fmt"],2,"destroy deletes every resource this folder created."],
+["ansible","A playbook fails installing nginx with: You need to be root to perform this command. Fix?",["Add become: yes","Change hosts:","Use state: started","Add more tasks"],0,"Installing software needs admin rights. become: yes = become the admin."],
+["ansible","Ansible shows UNREACHABLE ... Permission denied (publickey). What do you check?",["The playbook tasks","become: yes","ansible_user and the SSH key path in the inventory","The nginx version"],2,"Ansible could not log in. Wrong username (ec2-user vs ubuntu) or wrong key."],
+["ansible","ansible-playbook says: Syntax Error ... mapping values are not allowed here. Most likely cause?",["Wrong IP address","Wrong indentation in the YAML","nginx not installed","Missing become"],1,"YAML errors almost always come from spacing. Use spaces, never tabs, and line items up exactly."],
+["k8s","kubectl get pods shows ImagePullBackOff. What does it mean?",["The app crashed","Kubernetes could not download the image","Not enough memory","The service is missing"],1,"Usually a typo in the image name or a tag that does not exist. Use kubectl describe pod, then fix the YAML."],
+["k8s","kubectl get pods shows CrashLoopBackOff. What do you run next?",["kubectl logs <pod>","kubectl get svc","minikube start","kubectl scale"],0,"The image downloaded fine but the app keeps crashing. The logs show why."],
+["k8s","Pods are Running, but the Service does not respond. kubectl get endpoints web shows <none>. Why?",["Wrong image","The Service selector does not match the pod labels","Too many replicas","minikube is stopped"],1,"A Service finds pods by labels. If selector app: web does not match the pod's labels, it has nothing to send traffic to."],
+["k8s","A pod stays Pending. describe says Insufficient cpu. What does this mean?",["The image name is wrong","The cluster does not have enough resources to run it","The YAML is invalid","The app crashed"],1,"The scheduler cannot find room. Lower the replicas or the resource requests, or add capacity."],
+["cicd","A GitHub Actions job fails with: Unable to locate credentials. Most likely?",["Wrong runner","The AWS secrets are missing or misnamed in the repo settings","Docker is not installed","Branch is wrong"],1,"The workflow reads secrets by exact name. Check Settings → Secrets and the ${{ secrets.NAME }} spelling."],
+["cicd","You pushed to main but the workflow did not run at all. What do you check?",["The AWS region","The file is in .github/workflows/ and the branch name matches","The Dockerfile","The security group"],1,"GitHub only reads workflows from .github/workflows/, and on: push must list the right branch."],
+["aws","Your S3 static website shows 403 Forbidden. What do you check?",["EC2 security group","Block Public Access, the bucket policy and the index document","Lambda logs","Your Git branch"],1,"403 on S3 is a permissions problem: public access blocked or no bucket policy allowing reads."],
+["aws","You uploaded a new index.html but CloudFront still shows the old page. Fix?",["Delete the bucket","Create a CloudFront invalidation","Restart EC2","Change the region"],1,"CloudFront caches files. An invalidation for /* makes it fetch the new version."],
+["aws","An API Gateway endpoint returns 500. The backend is a Lambda. Where do you look first?",["S3","The Lambda's CloudWatch Logs","IAM users list","The VPC"],1,"The Lambda's logs show the real error, such as a missing permission or a typo in the table name."],
+["aws","An IAM user gets AccessDenied reading one S3 bucket. Best fix?",["Give AdministratorAccess","Add a policy allowing s3:GetObject and s3:ListBucket on that bucket only","Make the bucket public","Create a new account"],1,"Least privilege: give only the actions needed, only on that bucket."],
+["git","git push is rejected: Updates were rejected because the remote contains work you do not have. Fix?",["git push --force","git pull, then git push","git init","Delete the repo"],1,"Get the remote changes first. Force-pushing can delete other people's work."]
+];
+
+// Fill in: [topic, title, code before, answers, code after, hint]
+const FILL=[
+["tf","Create an EC2 server","resource \"aws_instance\" \"web\" {\n  ami           = data.aws_ami.amazon_linux.id\n  ",["instance_type"]," = \"t3.micro\"\n}","The size of the server. Two words joined with _."],
+["tf","Set the cloud and region","",["provider"]," \"aws\" {\n  region = \"eu-west-2\"\n}","Not \"provide\"."],
+["tf","Create an S3 bucket","",["resource"]," \"aws_s3_bucket\" \"site\" {\n  bucket = \"janvi-practice-site\"\n}","The block type that CREATES something."],
+["tf","Print the server's IP","",["output"]," \"public_ip\" {\n  value = aws_instance.web.public_ip\n}","The block type that prints a result."],
+["tf","Use a variable","variable \"instance_type\" {\n  default = \"t3.micro\"\n}\n\ninstance_type = ",[ "var"],".instance_type","Three letters."],
+["ansible","Run as admin","- hosts: web\n  ",["become"],": yes\n  tasks:\n    ...","Become the admin."],
+["ansible","Make sure nginx is installed","    - name: Install nginx\n      dnf:\n        name: nginx\n        state: ",["present"],"","Installed = ?"],
+["ansible","Make sure nginx is running","    - name: Start nginx\n      service:\n        name: nginx\n        state: ",["started"],"","Running = ?"],
+["ansible","Inventory login user","[web]\n3.10.20.30 ",["ansible_user"],"=ec2-user","Which user Ansible logs in as."],
+["k8s","Kind of object that keeps 3 copies running","apiVersion: apps/v1\nkind: ",["Deployment"],"\nmetadata:\n  name: web","The manager. Capital letter matters."],
+["k8s","Number of copies","spec:\n  ",["replicas"],": 3","Copies of the pod."],
+["k8s","Which image the container uses","      containers:\n        - name: web\n          ",["image"],": nginx:1.27",""],
+["k8s","How a Service finds its pods","kind: Service\nspec:\n  ",["selector"],":\n    app: web\n  ports:\n    - port: 80","It must match the pod labels."],
+["k8s","Create from a file","kubectl ",["apply"]," -f app.yaml",""],
+["k8s","Find why a pod has ImagePullBackOff","kubectl ",["describe"]," pod web-7d4b9c-x2k8p","Shows the Events."],
+["docker","Base image line","",["FROM"]," nginx:alpine\nCOPY index.html /usr/share/nginx/html/","Always the first line. Capitals."],
+["docker","Map host 8080 to container 80","docker run -d -p ",["8080:80"]," --name web myapp","HOST:CONTAINER"],
+["cicd","Run only on the main branch","on:\n  push:\n    ",["branches"],": [main]",""],
+["cicd","Get the code onto the runner","steps:\n  - uses: actions/",["checkout"],"@v4",""],
+["linux","Fix an SSH key that is too open","chmod ",["400"]," key.pem","Only you can read it."],
+["git","Commit with a message","git commit ",["-m"]," \"Add Terraform EC2\"",""]
+];
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
+const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+
+let state={mode:"cards",topic:store.get("dd-topic","all"),i:0,flipped:false,answered:null,fillResult:null};
+let known=new Set(store.get("dd-known",[]));
+let order={};
+
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function pool(){
+  const src={cards:CARDS,quiz:QUIZ,fill:FILL}[state.mode]||[];
+  const idx=src.map((_,n)=>n).filter(n=>state.topic==="all"||src[n][0]===state.topic);
+  const key=state.mode+"|"+state.topic;
+  if(!order[key]||order[key].length!==idx.length)order[key]=shuffle(idx);
+  return {src,list:order[key]};
+}
+function reshuffle(){delete order[state.mode+"|"+state.topic];state.i=0;reset();render()}
+function reset(){state.flipped=false;state.answered=null;state.fillResult=null}
+
+function renderChips(){
+  $("#chips").innerHTML=Object.entries(TOPICS).map(([k,v])=>`<button class="chip" data-topic="${k}" aria-pressed="${state.topic===k}">${v}</button>`).join("");
+  $("#chips").hidden=state.mode==="method";
+}
+function renderStat(){
+  const pct=Math.round(known.size/CARDS.length*100);
+  $("#stat").textContent=`${known.size}/${CARDS.length} cards known · ${pct}%`;
+}
+function nav(n){return `<div class="meta"><span>${n?(state.i+1)+" of "+n:"No items"}</span><button class="btn" style="flex:none;padding:6px 12px;font-size:.82rem" data-act="shuffle">Shuffle</button></div>`}
+
+function render(){
+  document.querySelectorAll(".modes button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.mode===state.mode));
+  renderChips();renderStat();
+  const m=$("#main");
+  if(state.mode==="method"){m.innerHTML=methodHTML();return}
+  const {src,list}=pool();
+  if(!list.length){m.innerHTML=`<div class="card"><p class="note">No ${state.mode==="fill"?"fill-in":"items"} for this topic yet. Pick another topic.</p></div>`;return}
+  state.i=Math.min(state.i,list.length-1);
+  const id=list[state.i],it=src[id];
+  if(state.mode==="cards")m.innerHTML=nav(list.length)+cardHTML(it,id)+(state.flipped?"":"");
+  if(state.mode==="quiz")m.innerHTML=nav(list.length)+quizHTML(it);
+  if(state.mode==="fill"){m.innerHTML=nav(list.length)+fillHTML(it);const inp=$("#blank");if(inp&&!state.fillResult)inp.focus({preventScroll:true})}
+}
+
+function cardHTML(c,id){
+  const k=known.has(id);
+  return `<div class="card flip" data-act="flip" role="button" tabindex="0" aria-label="Show answer">
+    <div class="meta"><span class="tag">${TOPICS[c[0]]}</span>${k?'<span class="tag" style="color:var(--good)">Known</span>':""}</div>
+    <p class="prompt">${esc(c[1])}</p>
+    ${state.flipped?`<div class="answer"><pre>${esc(c[2])}</pre>${c[3]?`<p class="note">${esc(c[3])}</p>`:""}</div>`:`<p class="hint">Say or type the command in your head first, then tap to check.</p>`}
+  </div>
+  <div class="row">${state.flipped
+    ?`<button class="btn" data-act="again">Practise again</button><button class="btn good" data-act="know">I knew it</button>`
+    :`<button class="btn primary" data-act="flip">Show answer</button>`}</div>`;
+}
+
+function quizHTML(q){
+  const a=state.answered;
+  const opts=q[2].map((o,n)=>{
+    let cls="opt";if(a!==null){if(n===q[3])cls+=" right";else if(n===a)cls+=" wrong"}
+    return `<button class="${cls}" data-opt="${n}" ${a!==null?"disabled":""}><b>${"ABCD"[n]}</b><span>${esc(o)}</span></button>`}).join("");
+  const v=a===null?"":`<div class="verdict ${a===q[3]?"ok":"no"}"><strong>${a===q[3]?"Correct":"Not quite. The answer is "+"ABCD"[q[3]]}</strong>${esc(q[4])}</div>`;
+  return `<div class="card"><span class="tag">${TOPICS[q[0]]} · Troubleshoot</span><p class="prompt">${esc(q[1])}</p><div class="opts">${opts}</div>${v}</div>
+  ${a!==null?`<div class="row"><button class="btn primary" data-act="next">Next scenario</button></div>`:""}`;
+}
+
+function fillHTML(f){
+  const r=state.fillResult;
+  const blank=r?`<span style="color:var(--${r.ok?"good":"bad"});font-weight:600">${esc(r.val||"…")}</span>`:`<input class="blank" id="blank" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Missing word">`;
+  const v=!r?"":`<div class="verdict ${r.ok?"ok":"no"}"><strong>${r.ok?"Correct":"Answer: "+esc(f[3][0])}</strong>${esc(r.msg)}</div>`;
+  return `<div class="card"><span class="tag">${TOPICS[f[0]]} · Fill the gap</span><p class="prompt">${esc(f[1])}</p>
+  <pre>${esc(f[2])}${blank}${esc(f[4])}</pre>
+  ${!r&&f[5]?`<p class="hint">Hint: ${esc(f[5])}</p>`:""}${v}</div>
+  <div class="row">${r?`<button class="btn" data-act="retry">Try again</button><button class="btn primary" data-act="next">Next</button>`:`<button class="btn" data-act="reveal">Show answer</button><button class="btn primary" data-act="check">Check</button>`}</div>`;
+}
+
+function checkFill(f,reveal){
+  const raw=reveal?"":($("#blank")?.value||"");
+  const val=raw.trim().replace(/\s+/g," ");
+  const ans=f[3];
+  let ok=false,msg="";
+  if(reveal){msg="Read it, then press Try again and type it from memory.";}
+  else if(ans.includes(val)){ok=true;msg="Exactly right.";}
+  else if(ans.some(a=>a.toLowerCase()===val.toLowerCase())){msg="Right word, wrong capitals. Commands and keys are case-sensitive.";}
+  else if(ans.some(a=>a===val.replace(/ /g,"_"))){msg="Right idea. Join the words with an underscore _, never a space.";}
+  else if(!val){msg="Type something first, or press Show answer.";}
+  else{msg="Look at the hint and try once more.";}
+  state.fillResult={ok,val:reveal?"":val,msg};render();
+}
+
+function methodHTML(){
+  return `<div class="card method"><h2>Solve any problem in 6 steps</h2><ol>
+  <li><strong>Understand.</strong> Repeat the problem back. Ask what changed and what the exact error is.</li>
+  <li><strong>Outside in.</strong> Is it running? Is the port open? Are permissions right? Is the app working?</li>
+  <li><strong>Read the error or logs.</strong> File, line, hint. Don't guess.</li>
+  <li><strong>Change one thing,</strong> then test again.</li>
+  <li><strong>Confirm the fix</strong> works (open the site, rerun the pipeline).</li>
+  <li><strong>Explain</strong> the root cause and how to prevent it.</li></ol>
+  <p class="note">Talk out loud the whole time. If stuck: "I'm not sure yet, but I'd check this next, because…"</p></div>
+  <div class="card method"><h2>Your personal traps</h2><ul>
+  <li>Commands are lowercase: <code>terraform</code>, <code>kubectl</code>, not Terraform or Kubectl.</li>
+  <li>Two words become one with an underscore: <code>instance_type</code>.</li>
+  <li>Spelling: <code>provider</code>, <code>kubectl</code>.</li>
+  <li>Terraform order: init → plan → apply → destroy. Don't skip apply.</li>
+  <li>YAML uses spaces, never tabs.</li></ul></div>
+  <div class="card method"><h2>Which tool tells you what</h2><ul>
+  <li>Terraform error → read <strong>file + line + hint</strong>.</li>
+  <li>Ansible permission error → check <code>become: yes</code>.</li>
+  <li>ImagePullBackOff → <code>kubectl describe pod</code>.</li>
+  <li>CrashLoopBackOff → <code>kubectl logs</code>.</li>
+  <li>Container exits → <code>docker logs</code>.</li>
+  <li>Pipeline fails → the <strong>first</strong> error in the log.</li>
+  <li>Works inside server, not outside → security group.</li></ul></div>
+  <div class="card method"><h2>Progress</h2><div class="bar"><i style="width:${Math.round(known.size/CARDS.length*100)}%"></i></div>
+  <p class="note">${known.size} of ${CARDS.length} flashcards marked as known on this device.</p>
+  <div class="row"><button class="btn" data-act="resetprog">Reset progress</button></div></div>`;
+}
+
+document.addEventListener("click",e=>{
+  const mb=e.target.closest(".modes button");if(mb){state.mode=mb.dataset.mode;state.i=0;reset();render();scrollTo(0,0);return}
+  const ch=e.target.closest(".chip");if(ch){state.topic=ch.dataset.topic;store.set("dd-topic",state.topic);state.i=0;reset();render();return}
+  const op=e.target.closest(".opt");if(op&&!op.disabled){state.answered=+op.dataset.opt;render();return}
+  const el=e.target.closest("[data-act]");if(!el)return;
+  const act=el.dataset.act,{src,list}=state.mode==="method"?{}:pool();
+  const next=()=>{state.i=(state.i+1)%list.length;reset();render()};
+  if(act==="flip"){state.flipped=true;render()}
+  else if(act==="know"){known.add(list[state.i]);store.set("dd-known",[...known]);next()}
+  else if(act==="again"){next()}
+  else if(act==="next"){next()}
+  else if(act==="shuffle"){reshuffle()}
+  else if(act==="check"){checkFill(src[list[state.i]],false)}
+  else if(act==="reveal"){checkFill(src[list[state.i]],true)}
+  else if(act==="retry"){state.fillResult=null;render()}
+  else if(act==="resetprog"){
+    if(el.dataset.confirm){known.clear();store.set("dd-known",[]);render()}
+    else{el.dataset.confirm="1";el.textContent="Tap again to reset";}
+  }
+});
+document.addEventListener("keydown",e=>{
+  if(e.key==="Enter"&&e.target.id==="blank"){e.preventDefault();const {src,list}=pool();checkFill(src[list[state.i]],false)}
+  else if((e.key==="Enter"||e.key===" ")&&e.target.classList.contains("flip")){e.preventDefault();state.flipped=true;render()}
+});
+if(!TOPICS[state.topic])state.topic="all";
+render();
+</script>
+</body>
+</html>
